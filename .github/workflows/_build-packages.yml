@@ -1,42 +1,38 @@
 name: Call building packages
-
-on:
+'on':
   workflow_call:
     inputs:
       artifact-name:
-        description: 'Unique name for collecting artifacts'
+        description: Unique name for collecting artifacts
         required: true
         type: string
       pkg-names:
-        description: 'list package names to be build in json format'
+        description: list package names to be build in json format
         required: false
         type: string
-        default: |
-          ["lightning", "app", "fabric", "pytorch"]
+        default: '["lightning", "app", "fabric", "pytorch"]
 
+          '
 defaults:
   run:
     shell: bash
-
 jobs:
-
   init:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - run: |
-        mkdir dist && touch dist/.placeholder
+    - run: 'mkdir dist && touch dist/.placeholder
+
+        '
     - uses: actions/upload-artifact@v3
       with:
         name: ${{ inputs.artifact-name }}
         path: dist
-
-
   build-packages:
     needs: init
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
-      max-parallel: 1  # run sequential to prevent download/upload collisions
+      max-parallel: 1
       matrix:
         pkg-name: ${{ fromJSON(inputs.pkg-names) }}
     steps:
@@ -48,18 +44,18 @@ jobs:
     - uses: actions/setup-python@v4
       with:
         python-version: 3.9
-
-    - run: python -c "print('NB_DIRS=' + str(2 if '${{ matrix.pkg-name }}' == 'pytorch' else 1))" >> $GITHUB_ENV
+    - run: python -c "print('NB_DIRS=' + str(2 if '${{ matrix.pkg-name }}' == 'pytorch'
+        else 1))" >> $GITHUB_ENV
     - name: Build & check package
       uses: ./.github/actions/pkg-check
       with:
         pkg-name: ${{ matrix.pkg-name }}
         nb-dirs: ${{ env.NB_DIRS }}
+    - run: 'mkdir pypi/${{ matrix.pkg-name }}
 
-    - run: |
-        mkdir pypi/${{ matrix.pkg-name }}
         cp dist/* pypi/${{ matrix.pkg-name }}/
 
+        '
     - uses: actions/upload-artifact@v3
       with:
         name: ${{ inputs.artifact-name }}

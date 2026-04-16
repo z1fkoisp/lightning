@@ -1,35 +1,38 @@
 name: Test Fabric
-
-# see: https://help.github.com/en/actions/reference/events-that-trigger-workflows
-on:
+'on':
   push:
-    branches: [master, "release/*"]
+    branches:
+    - master
+    - release/*
   pull_request:
-    branches: [master, "release/*"]
-    types: [opened, reopened, ready_for_review, synchronize]  # added `ready_for_review` since draft is skipped
+    branches:
+    - master
+    - release/*
+    types:
+    - opened
+    - reopened
+    - ready_for_review
+    - synchronize
     paths:
-      - ".actions/**"
-      - "requirements/fabric/**"
-      - "src/lightning/fabric/**"
-      - "src/lightning_fabric/*"
-      - "tests/tests_fabric/**"
-      - "pyproject.toml"  # includes pytest config
-      - ".github/workflows/ci-tests-fabric.yml"
-      - "!requirements/*/docs.txt"
-      - "!*.md"
-      - "!**/*.md"
-
+    - .actions/**
+    - requirements/fabric/**
+    - src/lightning/fabric/**
+    - src/lightning_fabric/*
+    - tests/tests_fabric/**
+    - pyproject.toml
+    - .github/workflows/ci-tests-fabric.yml
+    - '!requirements/*/docs.txt'
+    - '!*.md'
+    - '!**/*.md'
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref }}
-  cancel-in-progress: ${{ ! (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/heads/release/')) }}
-
+  cancel-in-progress: ${{ ! (github.ref == 'refs/heads/master' || startsWith(github.ref,
+    'refs/heads/release/')) }}
 env:
   FREEZE_REQUIREMENTS: 1
-
 defaults:
   run:
     shell: bash
-
 jobs:
   fabric-cpu:
     runs-on: ${{ matrix.os }}
@@ -38,110 +41,146 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {os: "macOS-11", pkg-name: "lightning", python-version: "3.8", pytorch-version: "1.11"}
-          - {os: "macOS-11", pkg-name: "lightning", python-version: "3.9", pytorch-version: "1.12"}
-          - {os: "ubuntu-20.04", pkg-name: "lightning", python-version: "3.9", pytorch-version: "1.11"}
-          - {os: "ubuntu-20.04", pkg-name: "lightning", python-version: "3.10", pytorch-version: "1.12"}
-          - {os: "windows-2022", pkg-name: "lightning", python-version: "3.9", pytorch-version: "1.11"}
-          - {os: "windows-2022", pkg-name: "lightning", python-version: "3.10", pytorch-version: "1.12"}
-          # only run PyTorch latest with Python latest
-          - {os: "macOS-11", pkg-name: "lightning", python-version: "3.10", pytorch-version: "1.13"}
-          - {os: "ubuntu-20.04", pkg-name: "lightning", python-version: "3.10", pytorch-version: "1.13"}
-          - {os: "windows-2022", pkg-name: "lightning", python-version: "3.10", pytorch-version: "1.13"}
-          # "oldest" versions tests, only on minimum Python
-          - {os: "macOS-11", pkg-name: "lightning", python-version: "3.8", pytorch-version: "1.11", requires: "oldest"}
-          - {os: "ubuntu-20.04", pkg-name: "lightning", python-version: "3.8", pytorch-version: "1.11", requires: "oldest"}
-          - {os: "windows-2022", pkg-name: "lightning", python-version: "3.8", pytorch-version: "1.11", requires: "oldest"}
-          # "fabric" installs the standalone package
-          - {os: "macOS-11", pkg-name: "fabric", python-version: "3.8", pytorch-version: "1.13"}
-          - {os: "ubuntu-20.04", pkg-name: "fabric", python-version: "3.8", pytorch-version: "1.13"}
-          - {os: "windows-2022", pkg-name: "fabric", python-version: "3.8", pytorch-version: "1.13"}
-    timeout-minutes: 25  # because of building grpcio on Mac
+        - os: macos-latest
+          pkg-name: lightning
+          python-version: '3.8'
+          pytorch-version: '1.11'
+        - os: macos-latest
+          pkg-name: lightning
+          python-version: '3.9'
+          pytorch-version: '1.12'
+        - os: ubuntu-latest
+          pkg-name: lightning
+          python-version: '3.9'
+          pytorch-version: '1.11'
+        - os: ubuntu-latest
+          pkg-name: lightning
+          python-version: '3.10'
+          pytorch-version: '1.12'
+        - os: windows-2022
+          pkg-name: lightning
+          python-version: '3.9'
+          pytorch-version: '1.11'
+        - os: windows-2022
+          pkg-name: lightning
+          python-version: '3.10'
+          pytorch-version: '1.12'
+        - os: macos-latest
+          pkg-name: lightning
+          python-version: '3.10'
+          pytorch-version: '1.13'
+        - os: ubuntu-latest
+          pkg-name: lightning
+          python-version: '3.10'
+          pytorch-version: '1.13'
+        - os: windows-2022
+          pkg-name: lightning
+          python-version: '3.10'
+          pytorch-version: '1.13'
+        - os: macos-latest
+          pkg-name: lightning
+          python-version: '3.8'
+          pytorch-version: '1.11'
+          requires: oldest
+        - os: ubuntu-latest
+          pkg-name: lightning
+          python-version: '3.8'
+          pytorch-version: '1.11'
+          requires: oldest
+        - os: windows-2022
+          pkg-name: lightning
+          python-version: '3.8'
+          pytorch-version: '1.11'
+          requires: oldest
+        - os: macos-latest
+          pkg-name: fabric
+          python-version: '3.8'
+          pytorch-version: '1.13'
+        - os: ubuntu-latest
+          pkg-name: fabric
+          python-version: '3.8'
+          pytorch-version: '1.13'
+        - os: windows-2022
+          pkg-name: fabric
+          python-version: '3.8'
+          pytorch-version: '1.13'
+    timeout-minutes: 25
     env:
       PACKAGE_NAME: ${{ matrix.pkg-name }}
       FREEZE_REQUIREMENTS: 1
     steps:
     - uses: actions/checkout@v3
-
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-
     - name: basic setup
-      run: |
-        pip --version
+      run: 'pip --version
+
         pip install -q -r .actions/requirements.txt
 
+        '
     - name: Set min. dependencies
       if: ${{ matrix.requires == 'oldest' }}
-      run: |
-        python .actions/assistant.py replace_oldest_ver
+      run: 'python .actions/assistant.py replace_oldest_ver
 
+        '
     - name: Adjust PyTorch versions in requirements files
       if: ${{ matrix.requires != 'oldest' }}
-      run: |
-        for fpath in `ls requirements/**/*.txt`; do \
-          python ./requirements/pytorch/adjust-versions.py $fpath ${{ matrix.pytorch-version }}; \
-        done
-        cat requirements/fabric/base.txt
-
+      run: "for fpath in `ls requirements/**/*.txt`; do \\\n  python ./requirements/pytorch/adjust-versions.py\
+        \ $fpath ${{ matrix.pytorch-version }}; \\\ndone\ncat requirements/fabric/base.txt\n"
     - name: pip wheels cache
       uses: actions/cache@v3
       with:
         path: .wheels
-        key: pip_wheels  # to not being cleand with crone
+        key: pip_wheels
         enableCrossOsArchive: true
-
     - name: Switch PyTorch URL
-      run: python -c "print('TORCH_URL=https://download.pytorch.org/whl/' + str('test/cpu/torch_test.html' if '${{matrix.release}}' == 'pre' else 'cpu/torch_stable.html'))" >> $GITHUB_ENV
-
+      run: python -c "print('TORCH_URL=https://download.pytorch.org/whl/' + str('test/cpu/torch_test.html'
+        if '${{matrix.release}}' == 'pre' else 'cpu/torch_stable.html'))" >> $GITHUB_ENV
     - name: Install package & dependencies
-      run: |
-        pip install -e .[test] "pytest-timeout" -U -f ${TORCH_URL} -f ".wheels/"
+      run: 'pip install -e .[test] "pytest-timeout" -U -f ${TORCH_URL} -f ".wheels/"
+
         pip install -r requirements/fabric/strategies.txt -f ".wheels/"
+
         pip list
+
+        '
     - name: Dump handy wheels
       if: github.event_name == 'push'
       uses: ./.github/actions/pip-wheels
       with:
         torch-url: ${{ env.TORCH_URL }}
-
     - name: Adjust tests
       if: ${{ matrix.pkg-name != 'lightning' }}
-      run: |
-        python .actions/assistant.py copy_replace_imports --source_dir="./tests" \
-          --source_import="lightning.fabric" --target_import="lightning_fabric"
-
+      run: "python .actions/assistant.py copy_replace_imports --source_dir=\"./tests\"\
+        \ \\\n  --source_import=\"lightning.fabric\" --target_import=\"lightning_fabric\"\
+        \n"
     - name: Testing Warnings
       working-directory: tests/tests_fabric
-      # needs to run outside of `pytest`
       run: python utilities/test_warnings.py
-
     - name: Switch coverage scope
-      run: python -c "print('COVERAGE_SCOPE=' + str('lightning' if '${{matrix.pkg-name}}' == 'lightning' else 'lightning_fabric'))" >> $GITHUB_ENV
-
+      run: python -c "print('COVERAGE_SCOPE=' + str('lightning' if '${{matrix.pkg-name}}'
+        == 'lightning' else 'lightning_fabric'))" >> $GITHUB_ENV
     - name: Testing Fabric
       working-directory: tests/tests_fabric
-      # NOTE: do not include coverage report here, see: https://github.com/nedbat/coveragepy/issues/1003
-      run: |
-        python -m coverage run --source ${{ env.COVERAGE_SCOPE }} \
-          -m pytest -v --timeout=30 --durations=50
-
+      run: "python -m coverage run --source ${{ env.COVERAGE_SCOPE }} \\\n  -m pytest\
+        \ -v --timeout=30 --durations=50\n"
     - name: Statistics
       if: success()
       working-directory: tests/tests_fabric
-      run: |
-        coverage report
+      run: 'coverage report
+
         coverage xml
 
+        '
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
-      # see: https://github.com/actions/toolkit/issues/399
       continue-on-error: true
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: tests/tests_fabric/coverage.xml
-        flags: ${{ env.COVERAGE_SCOPE }},cpu,pytest,python${{ matrix.python-version }}
+        flags: ${{ env.COVERAGE_SCOPE }},cpu,pytest,python${{ matrix.python-version
+          }}
         name: CPU-coverage
         fail_ci_if_error: false
